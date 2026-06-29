@@ -1,137 +1,165 @@
-const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType } = require('docx');
+const PDFDocument = require('pdfkit');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { deal, account, versions, landscape, narrative, phases, checkpoints } = req.body;
-
   const produit = deal.produit || 'VMware';
-  const titre = `${produit} Adoption Plan`;
 
-  const bold = (text, size = 22) => new TextRun({ text, bold: true, size });
-  const normal = (text, size = 22) => new TextRun({ text, size });
-  const h = (text, level = HeadingLevel.HEADING_1) => new Paragraph({ text, heading: level, spacing: { before: 300, after: 100 } });
-  const p = (text = '', opts = {}) => new Paragraph({ children: [new TextRun({ text, size: 22, ...opts })], spacing: { before: 80, after: 80 } });
-  const blank = () => new Paragraph({ text: '' });
+  const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-  const cellBold = (text, bg = null) => new TableCell({
-    children: [new Paragraph({ children: [new TextRun({ text, bold: true, size: 20 })] })],
-    shading: bg ? { fill: bg, type: ShadingType.CLEAR } : undefined,
-    margins: { top: 80, bottom: 80, left: 120, right: 120 }
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="ADP_${(account.name || 'export').replace(/\s+/g,'_')}.pdf"`);
+  doc.pipe(res);
+
+  const RED = '#CC0000';
+  const DARK = '#1A1A2E';
+  const GREY = '#4A4A4A';
+  const LIGHTGREY = '#F5F5F5';
+  const MIDGREY = '#CCCCCC';
+  const WHITE = '#FFFFFF';
+  const W = 595 - 100;
+
+  const sectionTitle = (text) => {
+    doc.moveDown(0.8);
+    doc.rect(50, doc.y, W, 22).fill(DARK);
+    doc.fontSize(11).fillColor(WHITE).font('Helvetica-Bold')
+       .text(text.toUpperCase(), 58, doc.y - 18, { width: W - 16 });
+    doc.moveDown(0.6);
+    doc.fillColor(GREY).font('Helvetica').fontSize(10);
+  };
+
+  const fieldRow = (label, value) => {
+    const y = doc.y;
+    doc.fontSize(9).fillColor(GREY).font('Helvetica-Bold').text(label, 50, y, { width: 180, continued: false });
+    doc.fontSize(9).fillColor(DARK).font('Helvetica').text(value || '—', 235, y, { width: W - 185 });
+    doc.moveDown(0.3);
+  };
+
+  const italic = (text) => {
+    doc.fontSize(9).fillColor('#888888').font('Helvetica-Oblique').text(text, { width: W });
+    doc.moveDown(0.4);
+  };
+
+  const bodyText = (text) => {
+    if (!text) return;
+    doc.fontSize(10).fillColor(DARK).font('Helvetica').text(text, { width: W });
+    doc.moveDown(0.5);
+  };
+
+  const drawTable = (headers, rows, colWidths) => {
+    const rowH = 20;
+    const tableX = 50;
+    let y = doc.y;
+    let x = tableX;
+    doc.rect(tableX, y, W, rowH).fill(DARK);
+    headers.forEach((h, i) => {
+      doc.fontSize(8).fillColor(WHITE).font('Helvetica-Bold')
+         .text(h, x + 4, y + 6, { width: colWidths[i] - 8 });
+      x += colWidths[i];
+    });
+    y += rowH;
+    rows.forEach((row, ri) => {
+      if (y + rowH > doc.page.height - 80) { doc.addPage(); y = 50; }
+      const bg = ri % 2 === 0 ? WHITE : LIGHTGREY;
+      doc.rect(tableX, y, W, rowH).fill(bg).stroke(MIDGREY);
+      x = tableX;
+      row.forEach((cell, i) => {
+        doc.fontSize(8).fillColor(DARK).font('Helvetica')
+           .text(cell || '—', x + 4, y + 6, { width: colWidths[i] - 8 });
+        x += colWidths[i];
+      });
+      y += rowH;
+    });
+    doc.y = y + 8;
+    doc.x = 50;
+  };
+
+  doc.rect(0, 0, 595, 140).fill(DARK);
+  doc.fontSize(22).fillColor(WHITE).font('Helvetica-Bold')
+     .text(`${produit} Adoption Plan`, 50, 45, { width: 495, align: 'center' });
+  doc.fontSize(12).fillColor(RED).font('Helvetica')
+     .text('Broadcom Limited — Confidential', 50, 80, { width: 495, align: 'center' });
+  doc.fontSize(10).fillColor('#AAAAAA')
+     .text(`Account: ${account.name || '—'}   |   Date: ${new Date().toLocaleDateString('fr-FR')}`, 50, 105, { width: 495, align: 'center' });
+  doc.moveDown(2);
+  doc.fillColor(GREY).font('Helvetica').fontSize(10);
+
+  sectionTitle('Instruction For Use');
+  ['Please make sure you provide the account details along with the current licenses.',
+   'Please provide SPOC for the customer and partner.',
+   'Please provide as much information as possible.',
+   'Please ensure the details are updated.',
+   'Please ensure the timelines are true, as AD checkpoints need to be scheduled.'
+  ].forEach(i => {
+    doc.fontSize(9).fillColor(DARK).font('Helvetica').text(`• ${i}`, 58, doc.y, { width: W - 8 });
+    doc.moveDown(0.2);
   });
 
-  const cell = (text) => new TableCell({
-    children: [new Paragraph({ children: [new TextRun({ text: text || '', size: 20 })] })],
-    margins: { top: 80, bottom: 80, left: 120, right: 120 }
-  });
+  sectionTitle('Account Details');
+  fieldRow('Account Name:', account.name);
+  fieldRow('ERP Number / Customer Site ID:', account.erp);
+  fieldRow('Customer Contact:', account.contactClient);
+  fieldRow('Partner Name:', account.partnerName);
+  fieldRow('Partner Contact:', account.contactPartner);
+  fieldRow('Partner Escalation Contact:', account.contactEscalade);
+  fieldRow('Broadcom Contact 1:', account.broadcom1);
+  fieldRow('Broadcom Contact 2:', account.broadcom2);
+  fieldRow('Broadcom Contact 3:', account.broadcom3);
+  fieldRow('Current Licenses:', account.licences);
 
-  const headerRow = (cols) => new TableRow({
-    children: cols.map(c => cellBold(c, 'D0D0D0')),
-    tableHeader: true
-  });
+  sectionTitle('Current State Architecture');
+  italic('Please provide the most up-to-date information regarding the customer, including the number of sites, the status of VMware license usage, and current deployment details.');
+  bodyText(narrative.currentState);
+  drawTable(['Product', 'Deployed Version'],
+    [['vSphere', versions.vsphere],['vSAN', versions.vsan],['NSX', versions.nsx],
+     ['VCF Operations', versions.vcfops],['VCF Automation', versions.vcfauto],
+     ['Container Runtime', versions.container],['vDefend / ATP', versions.vdefend]],
+    [220, W - 220]);
 
-  const dataRow = (cols) => new TableRow({ children: cols.map(c => cell(c)) });
+  sectionTitle(`${produit === 'VCF' || produit === 'VVF' ? 'Competitive' : 'Ecosystem'} Landscape`);
+  italic('Please share the latest view of the competitive landscape.');
+  const lsRows = (landscape || []).filter(r => r.tech).map(r => [r.tech, r.vendor, r.remarks]);
+  drawTable(['Technology', 'Competitive Vendor', 'Remarks/Comments'],
+    lsRows.length ? lsRows : [['—','—','—']], [140, 160, W - 300]);
 
-  const versionsRows = [
-    headerRow(['Product', 'Version']),
-    dataRow(['vSphere', versions.vsphere || 'Not deployed']),
-    dataRow(['vSAN', versions.vsan || 'Not deployed']),
-    dataRow(['NSX', versions.nsx || 'Not deployed']),
-    dataRow(['VCF Operations', versions.vcfops || 'Not deployed']),
-    dataRow(['VCF Automation', versions.vcfauto || 'Not deployed']),
-    dataRow(['Container Runtime', versions.container || 'Not deployed']),
-    dataRow(['vDefend / ATP', versions.vdefend || 'Not deployed']),
-  ];
+  sectionTitle(`${produit} Adoption Initiative`);
+  italic('Please outline the initiatives within the account, regardless of whether they are ultimately pursued.');
+  bodyText(narrative.adoptionInit);
 
-  const versionsTable = new Table({ rows: versionsRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  sectionTitle(`${produit} Collateral`);
+  italic('Any collateral related to the account, initiatives, or activities would be valuable.');
+  bodyText(narrative.collateral);
 
-  const lsRows = [headerRow(['Technology', 'Competitive Vendor', 'Remarks/Comments'])];
-  (landscape || []).forEach(row => lsRows.push(dataRow([row.tech, row.vendor, row.remarks])));
-  if (lsRows.length === 1) lsRows.push(dataRow(['—', '—', '—']));
-  const landscapeTable = new Table({ rows: lsRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  sectionTitle(`${produit} Activities and Timeline`);
+  italic('Please provide a high-level overview of the activities planned for this account to support adoption.');
+  const phRows = (phases || []).map(p => [p.phase, p.component, p.activities, p.duration, p.timeline]);
+  drawTable(['Phase', 'Project Component', 'Main Activities', 'Duration', 'Timeline'],
+    phRows.length ? phRows : [['—','—','—','—','—']], [65, 110, 170, 65, W - 410]);
 
-  const phRows = [headerRow(['Phase', 'Project Component', 'Main Activities', 'Duration', 'Timeline'])];
-  (phases || []).forEach(ph => phRows.push(dataRow([ph.phase, ph.component, ph.activities, ph.duration, ph.timeline])));
-  const phasesTable = new Table({ rows: phRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  sectionTitle('Commitment');
+  italic('Please provide details on any upcoming commitments.');
+  bodyText(narrative.commitment);
 
-  const cpRows = [headerRow(['Phase', 'Timeslot', 'Current Status', 'Checked by Broadcom AD', 'Checked by Broadcom SE'])];
-  (checkpoints || []).forEach(cp => cpRows.push(dataRow([cp.phase, cp.timeslot, cp.status, cp.ad, cp.se])));
-  const checkpointsTable = new Table({ rows: cpRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  sectionTitle('Checkpoints');
+  italic('These checkpoints are mandatory with the Broadcom Account Director.');
+  drawTable(['Phase', 'Timeslot', 'Current Status', 'Checked by AD', 'Checked by SE'],
+    (checkpoints || []).map(c => [c.phase, c.timeslot, c.status, c.ad, c.se]),
+    [65, 100, 100, 130, W - 395]);
 
-  const doc = new Document({
-    sections: [{
-      properties: {},
-      children: [
-        new Paragraph({ children: [new TextRun({ text: titre, bold: true, size: 36, color: '1F2937' })], alignment: AlignmentType.CENTER, spacing: { before: 0, after: 200 } }),
-        h('Instruction For Use', HeadingLevel.HEADING_2),
-        new Paragraph({ children: [new TextRun({ text: '• Please make sure you provide the account details along with the current licenses.', size: 20 })] }),
-        new Paragraph({ children: [new TextRun({ text: '• Please provide SPOC for the customer and partner.', size: 20 })] }),
-        new Paragraph({ children: [new TextRun({ text: '• Please provide as much information as possible.', size: 20 })] }),
-        new Paragraph({ children: [new TextRun({ text: '• Please ensure the details are updated.', size: 20 })] }),
-        new Paragraph({ children: [new TextRun({ text: '• Please ensure the timelines are true, as AD checkpoints need to be scheduled.', size: 20 })] }),
-        blank(),
-        h('Account Details'),
-        new Paragraph({ children: [bold('Account Name: '), normal(account.name || '')] }),
-        new Paragraph({ children: [bold('ERP Number / Customer Site ID: '), normal(account.erp || '')] }),
-        new Paragraph({ children: [bold('Customer Contact (Name and Email): '), normal(account.contactClient || '')] }),
-        new Paragraph({ children: [bold('Partner Name: '), normal(account.partnerName || '')] }),
-        new Paragraph({ children: [bold('Partner Contact (Name and Email): '), normal(account.contactPartner || '')] }),
-        new Paragraph({ children: [bold('Partner Escalation Contact (Name and Email): '), normal(account.contactEscalade || '')] }),
-        new Paragraph({ children: [bold('Broadcom Contact 1 (Name and Email): '), normal(account.broadcom1 || '')] }),
-        new Paragraph({ children: [bold('Broadcom Contact 2 (Name and Email): '), normal(account.broadcom2 || '')] }),
-        new Paragraph({ children: [bold('Broadcom Contact 3 (Name and Email): '), normal(account.broadcom3 || '')] }),
-        new Paragraph({ children: [bold('Current Licenses (product and quantity): '), normal(account.licences || '')] }),
-        blank(),
-        h('Current State Architecture'),
-        new Paragraph({ children: [new TextRun({ text: 'Please provide the most up-to-date information regarding the customer.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        p(narrative.currentState || ''),
-        blank(),
-        versionsTable,
-        blank(),
-        h(`${produit === 'VCF' || produit === 'VVF' ? 'Competitive' : 'Ecosystem'} Landscape`),
-        new Paragraph({ children: [new TextRun({ text: 'Please share the latest view of the competitive landscape.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        landscapeTable,
-        blank(),
-        h(`${produit} Adoption Initiative`),
-        new Paragraph({ children: [new TextRun({ text: 'Please outline the initiatives within the account.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        p(narrative.adoptionInit || ''),
-        blank(),
-        h(`${produit} Collateral`),
-        new Paragraph({ children: [new TextRun({ text: 'Any collateral related to the account, initiatives, or activities would be valuable.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        p(narrative.collateral || ''),
-        blank(),
-        h(`${produit} Activities and Timeline`),
-        new Paragraph({ children: [new TextRun({ text: 'Please provide a high-level overview of the activities planned.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        phasesTable,
-        blank(),
-        h('Commitment'),
-        new Paragraph({ children: [new TextRun({ text: 'Please provide details on any upcoming commitments.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        p(narrative.commitment || ''),
-        blank(),
-        h('Checkpoints'),
-        new Paragraph({ children: [new TextRun({ text: 'These checkpoints are mandatory with the Broadcom Account Director.', size: 20, italics: true, color: '6B7280' })] }),
-        blank(),
-        checkpointsTable,
-        blank(),
-        h('Comments/Remarks (Optional)'),
-        blank(),
-        p(narrative.comments || ''),
-        blank(),
-        blank(),
-        new Paragraph({ children: [new TextRun({ text: 'Broadcom Limited Confidential', size: 18, color: '9CA3AF' })], alignment: AlignmentType.CENTER }),
-        new Paragraph({ children: [new TextRun({ text: 'Version 1.0 | Broadcom Limited Confidential', size: 18, color: '9CA3AF' })], alignment: AlignmentType.CENTER }),
-      ]
-    }]
-  });
+  sectionTitle('Comments / Remarks (Optional)');
+  italic('Please share any comments or insights you may have.');
+  bodyText(narrative.comments);
 
-  const buffer = await Packer.toBuffer(doc);
-  res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-  res.setHeader('Content-Disposition', 'attachment; filename="adoption-plan.docx"');
-  res.send(buffer);
+  const range = doc.bufferedPageRange();
+  for (let i = 0; i < (range ? range.count : 1); i++) {
+    doc.switchToPage(i);
+    doc.rect(0, doc.page.height - 30, 595, 30).fill(DARK);
+    doc.fontSize(8).fillColor('#AAAAAA').font('Helvetica')
+       .text('Broadcom Limited Confidential — Version 1.0', 50, doc.page.height - 20, { width: 300 });
+    doc.fontSize(8).fillColor('#AAAAAA')
+       .text(`Page ${i + 1}`, 50, doc.page.height - 20, { width: 495, align: 'right' });
+  }
+
+  doc.end();
 };
