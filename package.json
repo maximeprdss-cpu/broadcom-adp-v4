@@ -2,6 +2,6 @@
   "name": "broadcom-adp-v4",
   "version": "4.0.0",
   "dependencies": {
-    "docx": "^8.5.0"
+    "pdfkit": "^0.15.0"
   }
 }
