@@ -151,15 +151,9 @@ module.exports = async (req, res) => {
   italic('Please share any comments or insights you may have.');
   bodyText(narrative.comments);
 
-  const range = doc.bufferedPageRange();
-  for (let i = 0; i < (range ? range.count : 1); i++) {
-    doc.switchToPage(i);
-    doc.rect(0, doc.page.height - 30, 595, 30).fill(DARK);
-    doc.fontSize(8).fillColor('#AAAAAA').font('Helvetica')
-       .text('Broadcom Limited Confidential — Version 1.0', 50, doc.page.height - 20, { width: 300 });
-    doc.fontSize(8).fillColor('#AAAAAA')
-       .text(`Page ${i + 1}`, 50, doc.page.height - 20, { width: 495, align: 'right' });
-  }
+  doc.moveDown(1);
+  doc.fontSize(8).fillColor('#AAAAAA').font('Helvetica')
+     .text('Broadcom Limited Confidential — Version 1.0', 50, doc.page.height - 40, { width: 495, align: 'center' });
 
   doc.end();
 };
