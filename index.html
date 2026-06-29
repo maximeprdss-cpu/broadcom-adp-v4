@@ -1011,7 +1011,7 @@
     <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">Le fichier Word se télécharge directement — ouvrez-le dans Word et exportez en PDF pour envoyer à Broadcom.</div>
     <button class="btn btn-generate" id="generateBtn" onclick="generateDoc()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Générer le document Word (.docx)
+      Générer le document PDF
     </button>
   </div>
 
@@ -1325,7 +1325,7 @@ async function generateDoc() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ADP_${g('accountName').replace(/\s+/g, '_') || 'export'}_${new Date().toISOString().slice(0,10)}.docx`;
+    a.download = `ADP_${g('accountName').replace(/\s+/g, '_') || 'export'}_${new Date().toISOString().slice(0,10)}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   } catch (e) {
