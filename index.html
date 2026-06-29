@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broadcom ADP — Arrow Electronics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #18202C;
+    --surface1: #1F2937;
+    --surface2: #2D3748;
+    --surface3: #374151;
+    --red:      #E03131;
+    --red-dim:  #9B1C1C;
+    --text:     #F1F3F5;
+    --muted:    #9CA3AF;
+    --border:   #374151;
+    --success:  #10B981;
+    --warning:  #F59E0B;
+    --radius:   10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    background: var(--surface1);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .brand-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; }
+  .brand-name { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--text); }
+  .brand-sep { color: var(--border); font-size: 18px; }
+  .brand-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  /* ── RECAP FLOTTANT ── */
+  .recap-bar {
+    background: var(--surface1);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 24px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .recap-bar.hidden { display: none; }
+  .recap-item { display: flex; align-items: center; gap: 6px; }
+  .recap-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .recap-value { font-size: 13px; font-weight: 600; color: var(--text); }
+  .recap-value.highlight { color: var(--red); }
+
+  /* ── LAYOUT ── */
+  .main { max-width: 760px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ── ÉTAPE HEADER ── */
+  .step-header { margin-bottom: 32px; }
+  .step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--red-dim);
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .step-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── FORM ── */
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: .02em;
+  }
+  label .req { color: var(--red); margin-left: 2px; }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  textarea,
+  select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color .15s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--red);
+  }
+  input.error, textarea.error, select.error {
+    border-color: var(--red);
+    background: #2D1B1B;
+  }
+  .field-error {
+    font-size: 11px;
+    color: var(--red);
+    margin-top: 4px;
+    display: none;
+  }
+  .field-error.visible { display: block; }
+
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239CA3AF' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+  select option { background: var(--surface2); }
+
+  /* ── ABV DISPLAY ── */
+  .abv-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: var(--muted);
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  .abv-display.filled { color: var(--text); font-weight: 500; }
+
+  /* ── RÉSULTATS ── */
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .result-chip {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .result-chip-label { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; }
+  .result-chip-value { font-size: 15px; font-weight: 600; color: var(--muted); }
+  .result-chip-value.yes { color: var(--success); }
+  .result-chip-value.no { color: var(--red); }
+  .result-chip-value.warn { color: var(--warning); }
+  .result-chip-value.neutral { color: var(--text); }
+
+  /* ── MESSAGE NO ADP ── */
+  .no-adp-msg {
+    background: #052E16;
+    border: 1px solid #166534;
+    border-radius: var(--radius);
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  .no-adp-msg.visible { display: block; }
+  .no-adp-icon { font-size: 32px; margin-bottom: 12px; }
+  .no-adp-title { font-size: 18px; font-weight: 600; color: var(--success); margin-bottom: 8px; }
+  .no-adp-text { font-size: 14px; color: #86EFAC; line-height: 1.6; }
+  .btn-reset-small {
+    display: inline-block;
+    margin-top: 16px;
+    background: transparent;
+    border: 1px solid #166534;
+    color: #86EFAC;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-reset-small:hover { background: #166534; }
+
+  /* ── TABLEAU VERSIONS ── */
+  .versions-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .versions-table th {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .versions-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  .versions-table tr:last-child td { border-bottom: none; }
+  .versions-table td:first-child { font-size: 13px; font-weight: 500; color: var(--muted); width: 180px; }
+  .versions-table td select { background: var(--surface2); }
+
+  /* ── TABLEAU LANDSCAPE ── */
+  .landscape-table { width: 100%; border-collapse: collapse; }
+  .landscape-table th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .landscape-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .landscape-table tr:last-child td { border-bottom: none; }
+  .landscape-table td:first-child { font-size: 13px; color: var(--muted); font-weight: 500; width: 140px; }
+  .landscape-table input { padding: 7px 10px; font-size: 13px; }
+  .btn-add-row {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--muted);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+    transition: all .15s;
+  }
+  .btn-add-row:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── TABLEAU PHASES ── */
+  .phases-table { width: 100%; border-collapse: collapse; }
+  .phases-table th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .phases-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .phases-table tr:last-child td { border-bottom: none; }
+  .phases-table td:first-child { font-size: 13px; color: var(--muted); font-weight: 600; width: 80px; }
+  .phases-table input, .phases-table textarea { font-size: 13px; padding: 7px 10px; }
+  .phases-table textarea { min-height: 70px; }
+
+  /* ── TABLEAU CHECKPOINTS ── */
+  .checkpoints-table { width: 100%; border-collapse: collapse; }
+  .checkpoints-table th {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+    text-align: left; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .checkpoints-table td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .checkpoints-table tr:last-child td { border-bottom: none; }
+  .checkpoints-table td:first-child { font-size: 13px; color: var(--muted); font-weight: 600; width: 80px; }
+  .checkpoints-table input { font-size: 13px; padding: 7px 10px; }
+
+  /* ── STATUS SELECT CHECKPOINTS ── */
+  .status-select {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    width: 100%;
+  }
+  .status-select.not-started { color: var(--muted); }
+  .status-select.in-progress { color: var(--warning); border-color: #78350F; background: #1C1405; }
+  .status-select.completed { color: var(--success); border-color: #166534; background: #052E16; }
+
+  /* ── RÉSUMÉ FINAL ── */
+  .summary-section { margin-bottom: 20px; }
+  .summary-section-title {
+    font-size: 11px; font-weight: 600; color: var(--red);
+    text-transform: uppercase; letter-spacing: .07em;
+    margin-bottom: 10px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-row { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px solid #1F2937; }
+  .summary-key { font-size: 12px; color: var(--muted); min-width: 200px; font-weight: 500; }
+  .summary-val { font-size: 13px; color: var(--text); flex: 1; }
+
+  /* ── NAVIGATION ── */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+  }
+  .btn-primary {
+    background: var(--red);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #C92A2A; }
+  .btn-primary:disabled { background: var(--surface3); color: var(--muted); cursor: not-allowed; }
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    padding: 11px 0;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-generate {
+    background: var(--success);
+    color: #fff;
+    font-size: 15px;
+    padding: 14px 28px;
+    width: 100%;
+    justify-content: center;
+    border-radius: var(--radius);
+    margin-top: 8px;
+  }
+  .btn-generate:hover { background: #059669; }
+  .btn-generate:disabled { background: var(--surface3); color: var(--muted); cursor: not-allowed; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .page.active { animation: slideIn .25s ease; }
+
+  /* ── WARNING AD ── */
+  .ad-warning {
+    background: #1C1405;
+    border: 1px solid #78350F;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--warning);
+    margin-top: 12px;
+    display: none;
+  }
+  .ad-warning.visible { display: block; }
+
+  /* ── EOL WARNING ── */
+  .eol-warning {
+    background: #2D1B1B;
+    border: 1px solid var(--red-dim);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #FCA5A5;
+    margin-top: 12px;
+    display: none;
+  }
+  .eol-warning.visible { display: block; }
+
+  /* ── RESET BTN ── */
+  .reset-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: color .15s;
+  }
+  .reset-btn:hover { color: var(--red); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .field-row { grid-template-columns: 1fr; }
+    .field-row-3 { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+    .main { padding: 24px 16px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="brand-dot"></div>
+    <span class="brand-name">BROADCOM</span>
+    <span class="brand-sep">/</span>
+    <span class="brand-sub">Configurateur Adoption Plan</span>
+  </div>
+  <button class="reset-btn" onclick="resetAll()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+    Réinitialiser
+  </button>
+</div>
+
+<!-- RECAP BAR -->
+<div class="recap-bar hidden" id="recapBar">
+  <div class="recap-item">
+    <span class="recap-label">Produit</span>
+    <span class="recap-value highlight" id="recapProduit">—</span>
+  </div>
+  <div class="recap-item">
+    <span class="recap-label">ABV / an</span>
+    <span class="recap-value" id="recapABV">—</span>
+  </div>
+  <div class="recap-item">
+    <span class="recap-label">Type</span>
+    <span class="recap-value" id="recapType">—</span>
+  </div>
+  <div class="recap-item">
+    <span class="recap-label">Durée</span>
+    <span class="recap-value" id="recapDuree">—</span>
+  </div>
+  <div class="recap-item">
+    <span class="recap-label">Cores</span>
+    <span class="recap-value" id="recapCores">—</span>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — DEAL & CALCUL
+═══════════════════════════════════════════ -->
+<div class="page active" id="page1">
+  <div class="step-header">
+    <div class="step-badge">Étape 1 sur 7</div>
+    <div class="step-title">Configurez votre deal</div>
+    <div class="step-desc">Renseignez les paramètres du deal — le système détermine automatiquement si un Adoption Plan est requis.</div>
+  </div>
+
+  <!-- Montant & Durée -->
+  <div class="card">
+    <div class="card-title">Montant & Durée</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Montant total du deal (€)<span class="req">*</span></label>
+        <input type="number" id="montant" placeholder="ex. 150000" oninput="calcABV()" onblur="validateField(this)">
+        <div class="field-error" id="err-montant">Ce champ est requis</div>
+      </div>
+      <div class="field">
+        <label>Durée du contrat<span class="req">*</span></label>
+        <select id="duree" onchange="calcABV(); checkDureeProduct()" onblur="validateField(this)">
+          <option value="">— Sélectionnez —</option>
+          <option value="1">1 an</option>
+          <option value="3">3 ans</option>
+          <option value="5">5 ans + Special Reason</option>
+        </select>
+        <div class="field-error" id="err-duree">Ce champ est requis</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>ABV — Montant annuel (€)</label>
+      <div class="abv-display" id="abvDisplay">Saisissez montant et durée</div>
+    </div>
+    <!-- Justification 5 ans -->
+    <div class="field" id="justif5Field" style="display:none">
+      <label>Justification 5 ans<span class="req">*</span></label>
+      <textarea id="justif5" placeholder="Indiquez la raison justifiant un contrat de 5 ans..." onblur="validateField(this)"></textarea>
+      <div class="field-error" id="err-justif5">Justification requise pour un contrat 5 ans</div>
+    </div>
+  </div>
+
+  <!-- Produit & Deal -->
+  <div class="card">
+    <div class="card-title">Produit & Configuration</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Produit VMware<span class="req">*</span></label>
+        <select id="produit" onchange="checkDureeProduct(); calcResult()" onblur="validateField(this)">
+          <option value="">— Sélectionnez —</option>
+          <option value="VVF">VVF</option>
+          <option value="VCF">VCF</option>
+          <option value="ENT+">ENT+</option>
+          <option value="VVS">VVS</option>
+        </select>
+        <div class="field-error" id="err-produit">Ce champ est requis</div>
+        <div class="eol-warning" id="eolWarn">⚠ ENT+ et VVS arrivent en fin de vie le <strong>11 octobre 2027</strong>. Anticipez la migration vers VVF ou VCF.</div>
+      </div>
+      <div class="field">
+        <label>Type de deal<span class="req">*</span></label>
+        <select id="typeDeal" onchange="calcResult()" onblur="validateField(this)">
+          <option value="">— Sélectionnez —</option>
+          <option value="Renewal Sub2Sub">Renewal Sub2Sub</option>
+          <option value="NEW">NEW</option>
+          <option value="Capacity">Capacity</option>
+          <option value="Migration">Migration</option>
+        </select>
+        <div class="field-error" id="err-typeDeal">Ce champ est requis</div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Nombre de cores<span class="req">*</span></label>
+      <input type="number" id="cores" placeholder="ex. 320" oninput="calcResult()" onblur="validateField(this)">
+      <div class="field-error" id="err-cores">Ce champ est requis</div>
+    </div>
+  </div>
+
+  <!-- Résultats -->
+  <div class="card" id="resultsCard" style="display:none">
+    <div class="card-title">Résultats — Décision automatique</div>
+    <div class="results-grid">
+      <div class="result-chip">
+        <div class="result-chip-label">Statut DR</div>
+        <div class="result-chip-value" id="res-dr">—</div>
+      </div>
+      <div class="result-chip">
+        <div class="result-chip-label">Plan d'adoption requis</div>
+        <div class="result-chip-value" id="res-adp">—</div>
+      </div>
+      <div class="result-chip">
+        <div class="result-chip-label">Approbation Broadcom AD</div>
+        <div class="result-chip-value" id="res-ad">—</div>
+      </div>
+      <div class="result-chip">
+        <div class="result-chip-label">Statut CPQ</div>
+        <div class="result-chip-value" id="res-cpq">—</div>
+      </div>
+    </div>
+    <div class="ad-warning" id="adWarn">⚠ ABV supérieur à 100 000 € — L'approbation du Broadcom Account Director est requise.</div>
+  </div>
+
+  <!-- Message pas d'ADP -->
+  <div class="no-adp-msg" id="noAdpMsg">
+    <div class="no-adp-icon">✅</div>
+    <div class="no-adp-title">Pas d'Adoption Plan requis</div>
+    <div class="no-adp-text">Ce deal ne nécessite pas de plan d'adoption Broadcom selon les règles EEA SMB en vigueur.</div>
+    <button class="btn-reset-small" onclick="resetAll()">Nouveau deal</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — ACCOUNT DETAILS
+═══════════════════════════════════════════ -->
+<div class="page" id="page2">
+  <div class="step-header">
+    <div class="step-badge">Étape 2 sur 7</div>
+    <div class="step-title">Informations du compte</div>
+    <div class="step-desc">Renseignez les contacts client, partenaire et Broadcom pour ce deal.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Compte client</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Nom du compte client<span class="req">*</span></label>
+        <input type="text" id="accountName" placeholder="ex. Air Liquide" onblur="validateField(this)">
+        <div class="field-error" id="err-accountName">Ce champ est requis</div>
+      </div>
+      <div class="field">
+        <label>ERP Number / Customer Site ID</label>
+        <input type="text" id="erpNumber" placeholder="ex. 1234567">
+      </div>
+    </div>
+    <div class="field">
+      <label>Contact client (Nom + Email)<span class="req">*</span></label>
+      <input type="text" id="contactClient" placeholder="ex. Jean Dupont / jean.dupont@client.fr" onblur="validateField(this)">
+      <div class="field-error" id="err-contactClient">Ce champ est requis</div>
+    </div>
+    <div class="field">
+      <label>Licences actuelles (produit et quantité)</label>
+      <input type="text" id="licencesActuelles" placeholder="ex. 832 coeurs VCF">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Partenaire</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Nom du partenaire</label>
+        <input type="text" id="partnerName" placeholder="ex. Orange Business">
+      </div>
+      <div class="field">
+        <label>Contact partenaire (Nom + Email)</label>
+        <input type="text" id="contactPartner" placeholder="ex. Marie Martin / m.martin@partner.fr">
+      </div>
+    </div>
+    <div class="field">
+      <label>Contact escalade (Nom + Email)</label>
+      <input type="text" id="contactEscalade" placeholder="ex. Paul Durand / p.durand@partner.fr">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Contacts Broadcom</div>
+    <div class="field">
+      <label>Broadcom Contact 1 (Nom + Email)</label>
+      <input type="text" id="broadcom1" placeholder="Nom / email@broadcom.com">
+    </div>
+    <div class="field">
+      <label>Broadcom Contact 2 (Nom + Email)</label>
+      <input type="text" id="broadcom2" placeholder="Nom / email@broadcom.com">
+    </div>
+    <div class="field">
+      <label>Broadcom Contact 3 (Nom + Email)</label>
+      <input type="text" id="broadcom3" placeholder="Nom / email@broadcom.com">
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(1)">← Précédent</button>
+    <button class="btn btn-primary" onclick="nextPage(2, 3)">Suivant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 3 — CURRENT STATE ARCHITECTURE
+═══════════════════════════════════════════ -->
+<div class="page" id="page3">
+  <div class="step-header">
+    <div class="step-badge">Étape 3 sur 7</div>
+    <div class="step-title">Architecture actuelle</div>
+    <div class="step-desc">Décrivez l'infrastructure existante, les versions déployées et les plans futurs du client.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Current State Architecture</div>
+    <div class="field">
+      <label>Description (sites, usage VMware, plans futurs, blocages...)</label>
+      <textarea id="currentState" rows="5" placeholder="ex. Le client exploite 2 sites avec 20 serveurs HP DL380, en architecture actif/passif. Refresh hardware prévu dans 12 mois..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Versions logicielles</div>
+    <table class="versions-table">
+      <thead>
+        <tr>
+          <th>Produit</th>
+          <th>Version déployée</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>vSphere</td>
+          <td>
+            <select id="ver-vsphere">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v6">v6</option>
+              <option value="v7">v7</option>
+              <option value="v8">v8</option>
+              <option value="v8.0.3">v8.0.3</option>
+              <option value="v9">v9</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>vSAN</td>
+          <td>
+            <select id="ver-vsan">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v7">v7</option>
+              <option value="v8">v8</option>
+              <option value="Enterprise">Enterprise</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>NSX</td>
+          <td>
+            <select id="ver-nsx">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v3">v3</option>
+              <option value="v4">v4</option>
+              <option value="v4.2">v4.2</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>VCF Operations</td>
+          <td>
+            <select id="ver-vcfops">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v8">v8</option>
+              <option value="v8.18">v8.18</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>VCF Automation</td>
+          <td>
+            <select id="ver-vcfauto">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v8">v8</option>
+              <option value="v9">v9</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Container Runtime</td>
+          <td>
+            <select id="ver-container">
+              <option value="Not deployed">Not deployed</option>
+              <option value="VKS">VKS</option>
+              <option value="RHOS">RHOS</option>
+              <option value="Tanzu">Tanzu</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>vDefend / ATP</td>
+          <td>
+            <select id="ver-vdefend">
+              <option value="Not deployed">Not deployed</option>
+              <option value="v4">v4</option>
+              <option value="v4.2 with ATP">v4.2 with ATP</option>
+            </select>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(2)">← Précédent</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Suivant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 4 — COMPETITIVE LANDSCAPE
+═══════════════════════════════════════════ -->
+<div class="page" id="page4">
+  <div class="step-header">
+    <div class="step-badge">Étape 4 sur 7</div>
+    <div class="step-title">Ecosystem / Competitive Landscape</div>
+    <div class="step-desc">Identifiez les vendors compétiteurs dans les zones où le client n'utilisera pas VCF/VVF.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Competitive Landscape</div>
+    <table class="landscape-table" id="landscapeTable">
+      <thead>
+        <tr>
+          <th>Technologie</th>
+          <th>Vendor compétiteur</th>
+          <th>Remarques</th>
+        </tr>
+      </thead>
+      <tbody id="landscapeBody">
+        <tr>
+          <td><input type="text" placeholder="ex. Storage"></td>
+          <td><input type="text" placeholder="ex. Pure Storage"></td>
+          <td><input type="text" placeholder="Commentaire..."></td>
+        </tr>
+        <tr>
+          <td><input type="text" placeholder="ex. Networking"></td>
+          <td><input type="text" placeholder="ex. Cisco ACI"></td>
+          <td><input type="text" placeholder="Commentaire..."></td>
+        </tr>
+        <tr>
+          <td><input type="text" placeholder="ex. Security"></td>
+          <td><input type="text" placeholder="ex. Palo Alto"></td>
+          <td><input type="text" placeholder="Commentaire..."></td>
+        </tr>
+      </tbody>
+    </table>
+    <button class="btn-add-row" onclick="addLandscapeRow()">+ Ajouter une ligne</button>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(3)">← Précédent</button>
+    <button class="btn btn-primary" onclick="goTo(5)">Suivant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 5 — ADOPTION INITIATIVE & COLLATERAL
+═══════════════════════════════════════════ -->
+<div class="page" id="page5">
+  <div class="step-header">
+    <div class="step-badge">Étape 5 sur 7</div>
+    <div class="step-title">Initiative & Collateral</div>
+    <div class="step-desc">Décrivez les initiatives d'adoption et les livrables disponibles pour ce compte.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Adoption Initiative</div>
+    <div class="field">
+      <label>Description des initiatives (indépendamment de leur mise en œuvre)</label>
+      <textarea id="adoptionInit" rows="5" placeholder="ex. L'objectif est de travailler sur un POC vSphere 9 dans les prochains mois, puis migration complète vers VCF 9..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Collateral disponible</div>
+    <div class="field">
+      <label>Documents disponibles (HLD, LLD, architectures, etc.)</label>
+      <textarea id="collateral" rows="4" placeholder="ex. High-Level Design disponible, Low-Level Design en cours de rédaction..."></textarea>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(4)">← Précédent</button>
+    <button class="btn btn-primary" onclick="goTo(6)">Suivant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 6 — ACTIVITIES & TIMELINE
+═══════════════════════════════════════════ -->
+<div class="page" id="page6">
+  <div class="step-header">
+    <div class="step-badge">Étape 6 sur 7</div>
+    <div class="step-title">Activities & Timeline</div>
+    <div class="step-desc">Plan d'activités par phase pour accompagner l'adoption. Complétez aussi le commitment et les checkpoints.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Activities & Timeline</div>
+    <table class="phases-table" id="phasesTable">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Composant</th>
+          <th>Activités principales</th>
+          <th>Durée</th>
+          <th>Timeline</th>
+        </tr>
+      </thead>
+      <tbody id="phasesBody">
+        <tr>
+          <td>Phase 1</td>
+          <td><input type="text" placeholder="ex. Consult & Envision"></td>
+          <td><textarea placeholder="Activités clés..."></textarea></td>
+          <td><input type="text" placeholder="ex. 5 jours"></td>
+          <td><input type="text" placeholder="ex. 2 mois"></td>
+        </tr>
+        <tr>
+          <td>Phase 2</td>
+          <td><input type="text" placeholder="ex. Design & Architecture"></td>
+          <td><textarea placeholder="Activités clés..."></textarea></td>
+          <td><input type="text" placeholder="ex. 10 jours"></td>
+          <td><input type="text" placeholder="ex. 3 mois"></td>
+        </tr>
+        <tr>
+          <td>Phase 3</td>
+          <td><input type="text" placeholder="ex. Implementation"></td>
+          <td><textarea placeholder="Activités clés..."></textarea></td>
+          <td><input type="text" placeholder="ex. 20 jours"></td>
+          <td><input type="text" placeholder="ex. 6 mois"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Commitment</div>
+    <div class="field">
+      <label>Ressources engagées, équipes, Broadcom Knights...</label>
+      <textarea id="commitment" rows="4" placeholder="ex. 1 Project Manager, 3 ingénieurs post-sales, 1 architecte technique..."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Checkpoints AD</div>
+    <table class="checkpoints-table">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Timeslot</th>
+          <th>Statut</th>
+          <th>Validé AD</th>
+          <th>Validé SE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Phase 1</td>
+          <td><input type="text" id="cp1-time" placeholder="Date/période"></td>
+          <td>
+            <select class="status-select" id="cp1-status" onchange="updateStatusStyle(this)">
+              <option value="Not started">Not started</option>
+              <option value="In progress">In progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </td>
+          <td><input type="text" id="cp1-ad" placeholder="Nom"></td>
+          <td><input type="text" id="cp1-se" placeholder="Nom"></td>
+        </tr>
+        <tr>
+          <td>Phase 2</td>
+          <td><input type="text" id="cp2-time" placeholder="Date/période"></td>
+          <td>
+            <select class="status-select" id="cp2-status" onchange="updateStatusStyle(this)">
+              <option value="Not started">Not started</option>
+              <option value="In progress">In progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </td>
+          <td><input type="text" id="cp2-ad" placeholder="Nom"></td>
+          <td><input type="text" id="cp2-se" placeholder="Nom"></td>
+        </tr>
+        <tr>
+          <td>Phase 3</td>
+          <td><input type="text" id="cp3-time" placeholder="Date/période"></td>
+          <td>
+            <select class="status-select" id="cp3-status" onchange="updateStatusStyle(this)">
+              <option value="Not started">Not started</option>
+              <option value="In progress">In progress</option>
+              <option value="Completed">Completed</option>
+            </select>
+          </td>
+          <td><input type="text" id="cp3-ad" placeholder="Nom"></td>
+          <td><input type="text" id="cp3-se" placeholder="Nom"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Comments / Remarks</div>
+    <div class="field">
+      <label>Commentaires optionnels</label>
+      <textarea id="comments" rows="3" placeholder="Toute information complémentaire utile..."></textarea>
+    </div>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(5)">← Précédent</button>
+    <button class="btn btn-primary" onclick="goTo(7)">Suivant →</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PAGE 7 — RÉSUMÉ & GÉNÉRATION
+═══════════════════════════════════════════ -->
+<div class="page" id="page7">
+  <div class="step-header">
+    <div class="step-badge">Étape 7 sur 7</div>
+    <div class="step-title">Vérification & Génération</div>
+    <div class="step-desc">Relisez toutes les informations avant de générer le document Word à envoyer à Broadcom.</div>
+  </div>
+
+  <div class="card" id="summaryCard">
+    <!-- Rempli dynamiquement -->
+  </div>
+
+  <div class="card" style="text-align:center; padding: 28px;">
+    <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">Le fichier Word se télécharge directement — ouvrez-le dans Word et exportez en PDF pour envoyer à Broadcom.</div>
+    <button class="btn btn-generate" id="generateBtn" onclick="generateDoc()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Générer le document Word (.docx)
+    </button>
+  </div>
+
+  <div class="nav-bar">
+    <button class="btn btn-secondary" onclick="goTo(6)">← Précédent</button>
+    <div></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ── STATE ──
+let currentPage = 1;
+let adpRequired = false;
+let dealResult = {};
+
+// ── NAVIGATION ──
+function goTo(n) {
+  document.getElementById('page' + currentPage).classList.remove('active');
+  document.getElementById('page' + n).classList.add('active');
+  currentPage = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (n === 7) buildSummary();
+}
+
+function nextPage(from, to) {
+  if (!validatePage(from)) return;
+  goTo(to);
+}
+
+// ── CALCUL ABV ──
+function calcABV() {
+  const montant = parseFloat(document.getElementById('montant').value) || 0;
+  const duree = parseInt(document.getElementById('duree').value) || 0;
+  const display = document.getElementById('abvDisplay');
+  if (montant > 0 && duree > 0) {
+    const abv = montant / duree;
+    display.textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(abv);
+    display.classList.add('filled');
+  } else {
+    display.textContent = 'Saisissez montant et durée';
+    display.classList.remove('filled');
+  }
+  calcResult();
+}
+
+// ── DURÉE / PRODUIT INTERACTION ──
+function checkDureeProduct() {
+  const duree = document.getElementById('duree').value;
+  const produit = document.getElementById('produit').value;
+  const justif = document.getElementById('justif5Field');
+  justif.style.display = duree === '5' ? 'block' : 'none';
+
+  // ENT+ et VVS bloqués à 1 an
+  const durationSelect = document.getElementById('duree');
+  if ((produit === 'ENT+' || produit === 'VVS') && duree !== '1' && duree !== '') {
+    durationSelect.value = '1';
+    calcABV();
+  }
+  // EOL warning
+  document.getElementById('eolWarn').classList.toggle('visible', produit === 'ENT+' || produit === 'VVS');
+  calcResult();
+}
+
+// ── CALCUL RÉSULTATS ──
+function calcResult() {
+  const montant = parseFloat(document.getElementById('montant').value) || 0;
+  const duree = parseInt(document.getElementById('duree').value) || 0;
+  const produit = document.getElementById('produit').value;
+  const type = document.getElementById('typeDeal').value;
+  const cores = parseInt(document.getElementById('cores').value) || 0;
+
+  if (!produit || !type || !duree || !montant || !cores) return;
+
+  const abv = montant / duree;
+  let dr = false, adp = false, ad = false, cpq = '—';
+
+  if (abv < 10000) {
+    dr = false; adp = false;
+  } else if (produit === 'ENT+' || produit === 'VVS') {
+    dr = false; adp = false; cpq = 'Non eligible DR';
+  } else if (produit === 'VCF' && duree === 1) {
+    dr = false; adp = false; cpq = 'No DR — utiliser VVF';
+  } else if (produit === 'VVF') {
+    if (duree > 1) {
+      if (type === 'Renewal Sub2Sub' && cores > 300) { dr = true; adp = true; }
+      else if (type !== 'Renewal Sub2Sub' && cores > 200) { dr = true; adp = true; }
+    }
+  } else if (produit === 'VCF') {
+    if (duree > 1) {
+      if (type === 'Renewal Sub2Sub' && cores > 190) { dr = true; adp = true; }
+      else if (type !== 'Renewal Sub2Sub' && cores > 120) { dr = true; adp = true; }
+    }
+  }
+
+  if (abv > 100000) ad = true;
+  if (dr) cpq = 'DR eligible';
+  else if (cpq === '—') cpq = 'Standard';
+
+  dealResult = { dr, adp, ad, abv, cpq, produit, type, duree, cores, montant };
+  adpRequired = adp;
+
+  // Afficher résultats
+  const card = document.getElementById('resultsCard');
+  card.style.display = 'block';
+  setChip('res-dr', dr ? 'YES' : 'NO', dr ? 'yes' : 'no');
+  setChip('res-adp', adp ? 'Requis' : 'Non requis', adp ? 'yes' : 'no');
+  setChip('res-ad', ad ? 'Requise' : 'Non requise', ad ? 'warn' : 'neutral');
+  setChip('res-cpq', cpq, 'neutral');
+
+  document.getElementById('adWarn').classList.toggle('visible', ad);
+
+  // Mise à jour recap bar
+  updateRecap();
+
+  // Basculement automatique
+  const noAdpMsg = document.getElementById('noAdpMsg');
+  if (adp) {
+    noAdpMsg.classList.remove('visible');
+    // Basculer vers page 2 après un court délai
+    setTimeout(() => { if (adpRequired) goTo(2); }, 600);
+  } else if (dr === false && abv >= 10000) {
+    noAdpMsg.classList.add('visible');
+  } else if (abv < 10000) {
+    noAdpMsg.classList.add('visible');
+  }
+}
+
+function setChip(id, text, cls) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'result-chip-value ' + cls;
+}
+
+// ── RECAP BAR ──
+function updateRecap() {
+  const { produit, abv, type, duree, cores } = dealResult;
+  if (!produit) return;
+  document.getElementById('recapBar').classList.remove('hidden');
+  document.getElementById('recapProduit').textContent = produit || '—';
+  document.getElementById('recapABV').textContent = abv ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(abv) : '—';
+  document.getElementById('recapType').textContent = type || '—';
+  document.getElementById('recapDuree').textContent = duree ? duree + ' an' + (duree > 1 ? 's' : '') : '—';
+  document.getElementById('recapCores').textContent = cores ? cores + ' cores' : '—';
+}
+
+// ── VALIDATION ──
+function validateField(el) {
+  const errId = 'err-' + el.id;
+  const errEl = document.getElementById(errId);
+  if (!el.value.trim()) {
+    el.classList.add('error');
+    if (errEl) errEl.classList.add('visible');
+    return false;
+  } else {
+    el.classList.remove('error');
+    if (errEl) errEl.classList.remove('visible');
+    return true;
+  }
+}
+
+function validatePage(page) {
+  const requiredByPage = {
+    1: ['montant', 'duree', 'produit', 'typeDeal', 'cores'],
+    2: ['accountName', 'contactClient'],
+  };
+  const fields = requiredByPage[page] || [];
+  let valid = true;
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !validateField(el)) valid = false;
+  });
+  return valid;
+}
+
+// ── LANDSCAPE ROWS ──
+function addLandscapeRow() {
+  const tbody = document.getElementById('landscapeBody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" placeholder="Technologie"></td><td><input type="text" placeholder="Vendor"></td><td><input type="text" placeholder="Remarques"></td>`;
+  tbody.appendChild(tr);
+}
+
+// ── STATUS STYLE CHECKPOINTS ──
+function updateStatusStyle(sel) {
+  sel.className = 'status-select';
+  if (sel.value === 'In progress') sel.classList.add('in-progress');
+  else if (sel.value === 'Completed') sel.classList.add('completed');
+}
+
+// ── RÉSUMÉ ──
+function buildSummary() {
+  const g = id => (document.getElementById(id) || {}).value || '—';
+  const fmt = v => v === '—' ? '—' : v;
+
+  // Landscape rows
+  const lRows = [];
+  document.querySelectorAll('#landscapeBody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs[0] && inputs[0].value) lRows.push([inputs[0].value, inputs[1].value || '—', inputs[2].value || '—']);
+  });
+
+  // Phases rows
+  const pRows = [];
+  document.querySelectorAll('#phasesBody tr').forEach((tr, i) => {
+    const inputs = tr.querySelectorAll('input, textarea');
+    pRows.push({
+      phase: 'Phase ' + (i + 1),
+      comp: inputs[0].value || '—',
+      act: inputs[1].value || '—',
+      dur: inputs[2].value || '—',
+      tl: inputs[3].value || '—'
+    });
+  });
+
+  const { produit, abv, type, duree, cores, dr, adp, ad, cpq } = dealResult;
+  const fmtCur = v => v ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v) : '—';
+
+  const html = `
+    <div class="summary-section">
+      <div class="summary-section-title">Deal</div>
+      <div class="summary-row"><span class="summary-key">Produit</span><span class="summary-val">${produit || '—'}</span></div>
+      <div class="summary-row"><span class="summary-key">Durée</span><span class="summary-val">${duree ? duree + ' an' + (duree > 1 ? 's' : '') : '—'}</span></div>
+      <div class="summary-row"><span class="summary-key">Type de deal</span><span class="summary-val">${type || '—'}</span></div>
+      <div class="summary-row"><span class="summary-key">Cores</span><span class="summary-val">${cores || '—'}</span></div>
+      <div class="summary-row"><span class="summary-key">ABV / an</span><span class="summary-val">${fmtCur(abv)}</span></div>
+      <div class="summary-row"><span class="summary-key">Statut DR</span><span class="summary-val">${dr ? 'YES' : 'NO'}</span></div>
+      <div class="summary-row"><span class="summary-key">Approbation AD</span><span class="summary-val">${ad ? 'Requise' : 'Non requise'}</span></div>
+    </div>
+    <div class="summary-section">
+      <div class="summary-section-title">Compte client</div>
+      <div class="summary-row"><span class="summary-key">Nom du compte</span><span class="summary-val">${g('accountName')}</span></div>
+      <div class="summary-row"><span class="summary-key">ERP Number</span><span class="summary-val">${g('erpNumber')}</span></div>
+      <div class="summary-row"><span class="summary-key">Contact client</span><span class="summary-val">${g('contactClient')}</span></div>
+      <div class="summary-row"><span class="summary-key">Licences actuelles</span><span class="summary-val">${g('licencesActuelles')}</span></div>
+      <div class="summary-row"><span class="summary-key">Partenaire</span><span class="summary-val">${g('partnerName')}</span></div>
+      <div class="summary-row"><span class="summary-key">Contact partenaire</span><span class="summary-val">${g('contactPartner')}</span></div>
+      <div class="summary-row"><span class="summary-key">Contact escalade</span><span class="summary-val">${g('contactEscalade')}</span></div>
+      <div class="summary-row"><span class="summary-key">Broadcom Contact 1</span><span class="summary-val">${g('broadcom1')}</span></div>
+      <div class="summary-row"><span class="summary-key">Broadcom Contact 2</span><span class="summary-val">${g('broadcom2')}</span></div>
+      <div class="summary-row"><span class="summary-key">Broadcom Contact 3</span><span class="summary-val">${g('broadcom3')}</span></div>
+    </div>
+    <div class="summary-section">
+      <div class="summary-section-title">Architecture & Narrative</div>
+      <div class="summary-row"><span class="summary-key">Current State</span><span class="summary-val">${g('currentState').substring(0,100)}${g('currentState').length > 100 ? '...' : ''}</span></div>
+      <div class="summary-row"><span class="summary-key">Adoption Initiative</span><span class="summary-val">${g('adoptionInit').substring(0,100)}${g('adoptionInit').length > 100 ? '...' : ''}</span></div>
+      <div class="summary-row"><span class="summary-key">Commitment</span><span class="summary-val">${g('commitment').substring(0,100)}${g('commitment').length > 100 ? '...' : ''}</span></div>
+    </div>
+  `;
+  document.getElementById('summaryCard').innerHTML = html;
+}
+
+// ── GÉNÉRATION DOC ──
+async function generateDoc() {
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Génération en cours...';
+
+  const g = id => (document.getElementById(id) || {}).value || '';
+
+  // Landscape data
+  const landscape = [];
+  document.querySelectorAll('#landscapeBody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs[0] && inputs[0].value) landscape.push({ tech: inputs[0].value, vendor: inputs[1].value || '', remarks: inputs[2].value || '' });
+  });
+
+  // Phases data
+  const phases = [];
+  document.querySelectorAll('#phasesBody tr').forEach((tr, i) => {
+    const inputs = tr.querySelectorAll('input, textarea');
+    phases.push({ phase: 'Phase ' + (i + 1), component: inputs[0].value || '', activities: inputs[1].value || '', duration: inputs[2].value || '', timeline: inputs[3].value || '' });
+  });
+
+  const payload = {
+    deal: dealResult,
+    account: {
+      name: g('accountName'), erp: g('erpNumber'),
+      contactClient: g('contactClient'), licences: g('licencesActuelles'),
+      partnerName: g('partnerName'), contactPartner: g('contactPartner'),
+      contactEscalade: g('contactEscalade'),
+      broadcom1: g('broadcom1'), broadcom2: g('broadcom2'), broadcom3: g('broadcom3')
+    },
+    versions: {
+      vsphere: g('ver-vsphere'), vsan: g('ver-vsan'), nsx: g('ver-nsx'),
+      vcfops: g('ver-vcfops'), vcfauto: g('ver-vcfauto'),
+      container: g('ver-container'), vdefend: g('ver-vdefend')
+    },
+    landscape,
+    narrative: {
+      currentState: g('currentState'), adoptionInit: g('adoptionInit'),
+      collateral: g('collateral'), commitment: g('commitment'), comments: g('comments')
+    },
+    phases,
+    checkpoints: [
+      { phase: 'Phase 1', timeslot: g('cp1-time'), status: g('cp1-status'), ad: g('cp1-ad'), se: g('cp1-se') },
+      { phase: 'Phase 2', timeslot: g('cp2-time'), status: g('cp2-status'), ad: g('cp2-ad'), se: g('cp2-se') },
+      { phase: 'Phase 3', timeslot: g('cp3-time'), status: g('cp3-status'), ad: g('cp3-ad'), se: g('cp3-se') }
+    ]
+  };
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('Erreur serveur');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADP_${g('accountName').replace(/\s+/g, '_') || 'export'}_${new Date().toISOString().slice(0,10)}.docx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (e) {
+    alert('Erreur lors de la génération. Vérifiez votre connexion.');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Générer le document Word (.docx)';
+}
+
+// ── RESET ──
+function resetAll() {
+  if (!confirm('Réinitialiser le formulaire ?')) return;
+  document.querySelectorAll('input, textarea, select').forEach(el => {
+    el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+    el.classList.remove('error');
+  });
+  document.querySelectorAll('.field-error').forEach(e => e.classList.remove('visible'));
+  document.getElementById('abvDisplay').textContent = 'Saisissez montant et durée';
+  document.getElementById('abvDisplay').classList.remove('filled');
+  document.getElementById('resultsCard').style.display = 'none';
+  document.getElementById('noAdpMsg').classList.remove('visible');
+  document.getElementById('recapBar').classList.add('hidden');
+  document.getElementById('justif5Field').style.display = 'none';
+  document.getElementById('eolWarn').classList.remove('visible');
+  document.getElementById('adWarn').classList.remove('visible');
+  dealResult = {}; adpRequired = false;
+  goTo(1);
+}
+</script>
+</body>
+</html>
